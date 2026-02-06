@@ -6,7 +6,6 @@ __pycache__/
 venv/
 env/
 data/
-*.csv
 *.pkl
 
 # Assignment 2 Specific
