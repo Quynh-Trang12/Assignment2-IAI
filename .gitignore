@@ -1,0 +1,54 @@
+# Python / Data (Added to fix push error)
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+data/
+*.csv
+*.pkl
+
+# Assignment 2 Specific
+Assignment 2A/*
+Assignment 2B/*
+COS30019-2025 S1-A2.pdf
+*.pdf
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Other
+*.log
+*.pyc
+
+# Testing
+.pytest_cache/*
+*.coverage
+htmlcov/*
+
+# Agent
+.agent/*
+.agent/rules/*
+.agent/memory/*
+.agent/state/*
+.agent/tools/*
+.agent/logs/*
+.agent/cache/*
+.agent/config/*
+.agent/data/*
+.agent/temp/*
+.agent/tmp/*
+.agent/backup/*
+.agent/restore/*
+.agent/workflows/*
+
+
