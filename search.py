@@ -30,8 +30,9 @@ def main():
     print(f"{filepath} {method.upper()}")
     if res:
         print(f"{res[0]} {res[1]}")
-        path_str = str(res[2])
-        print(path_str)
+        # path_str = str(res[2])
+        # print(path_str)
+        print(" ".join(map(str, res[2])))
     else:
         print("No solution found.")
 
