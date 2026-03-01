@@ -5,6 +5,7 @@ Nodes:
 Edges:
 (1,2): 1
 (2,1): 1
+
 Origin:
 1
 Destinations:

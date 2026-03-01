@@ -48,7 +48,7 @@ class SearchResult(NamedTuple):
 
 
 # ---------------------------------------------------------------------------
-# Reporting Engine (Single Responsibility)
+# Reporting Engine
 # ---------------------------------------------------------------------------
 class CSVBenchmarkReporter:
     """
@@ -282,7 +282,7 @@ if __name__ == "__main__":
     base_directory = Path(__file__).parent
     target_executable = base_directory / "search.py"
     target_test_cases_dir = base_directory / "tests" / "cases"
-    target_report_file = base_directory / "tests" / "results.csv"
+    target_report_file = base_directory / "results.csv"
     
     algorithms_to_evaluate = ["dfs", "bfs", "gbfs", "as", "cus1", "cus2"]
 

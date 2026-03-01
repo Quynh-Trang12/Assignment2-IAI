@@ -283,7 +283,7 @@ if __name__ == "__main__":
     # ensuring the 'tests/cases' directory is built relative to the codebase root,
     # regardless of where the user's terminal is currently cd'd into.
     base_directory = Path(__file__).parent
-    target_output_directory = base_directory / "tests" / "cases"
+    target_output_directory = base_directory / "cases"
 
     # Instantiate via Dependency Injection and run
     factory_orchestrator = TestFactoryOrchestrator(target_directory=target_output_directory)
