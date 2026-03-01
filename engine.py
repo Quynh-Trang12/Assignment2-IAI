@@ -1,175 +1,290 @@
 import heapq
 from collections import deque
+from typing import List, Tuple, Optional, Set, Any
 from models import SearchState
 
 
 class SearchEngine:
-    def __init__(self, graph):
+    """
+    SearchEngine is responsible for executing various pathfinding and search algorithms 
+    on a provided graph representation.
+    
+    Attributes:
+        graph (Any): The graph object containing nodes, edges, heuristics, and origin/destination data.
+        total_nodes_created (int): A metric tracking the total number of SearchState instances generated. 
+                                   This is used to evaluate the space complexity and efficiency of the algorithm.
+        creation_timestamp (int): A strictly increasing counter acting as a chronological timestamp. 
+                                  It guarantees the secondary tie-breaking rule: if costs are equal, 
+                                  nodes generated earlier are expanded first.
+    """
+
+    def __init__(self, graph: Any) -> None:
+        """
+        Initializes the Search Engine with the problem graph and resets tracking metrics.
+        
+        Args:
+            graph: The problem space graph defining the Route Finding Problem.
+        """
         self.graph = graph
-        self.node_count = 0
-        self.timestamp = 0
+        self.total_nodes_created: int = 0
+        self.creation_timestamp: int = 0
 
-    def _create_node(self, node_id, parent, g, method):
-        self.node_count += 1
-        self.timestamp += 1
-        h = self.graph.heuristic(node_id)
-        return SearchState(node_id, parent, g, h, method, self.timestamp)
+    def _create_search_state(
+        self, 
+        node_identifier: int, 
+        parent_state: Optional[SearchState], 
+        cumulative_cost: float, 
+        search_method: str
+    ) -> SearchState:
+        """
+        Generates a new SearchState, calculates its heuristic cost, and increments tracking metrics.
+        
+        Args:
+            node_identifier (int): The unique identifier of the current graph node.
+            parent_state (Optional[SearchState]): The state object representing the predecessor node.
+            cumulative_cost (float): The total path cost from the origin up to this node.
+            search_method (str): The identifier of the algorithm currently being executed.
+            
+        Returns:
+            SearchState: The newly instantiated and chronologically stamped search state.
+        """
+        self.total_nodes_created += 1
+        self.creation_timestamp += 1
+        
+        heuristic_cost = self.graph.heuristic(node_identifier)
+        
+        return SearchState(
+            node_identifier, 
+            parent_state, 
+            cumulative_cost, 
+            heuristic_cost, 
+            search_method, 
+            self.creation_timestamp
+        )
 
-    def _reconstruct(self, state):
-        path = []
-        curr = state
-        while curr:
-            path.append(curr.node_id)
-            curr = curr.parent
-        return path[::-1]
+    def _reconstruct_path(self, goal_state: SearchState) -> List[int]:
+        """
+        Backtracks from the reached goal state up to the origin to reconstruct the traversal path.
+        
+        Args:
+            goal_state (SearchState): The state representing the reached destination.
+            
+        Returns:
+            List[int]: A sequential list of node identifiers representing the path from origin to destination.
+        """
+        path_sequence: List[int] = []
+        current_state: Optional[SearchState] = goal_state
+        
+        while current_state is not None:
+            path_sequence.append(current_state.node_id)
+            current_state = current_state.parent
+            
+        return path_sequence[::-1]
 
-    def solve(self, method: str):
-        # Dispatcher
-        m = method.lower()
-        if m == "dfs":
-            return self._dfs()
-        if m == "bfs":
-            return self._bfs()
-        if m == "gbfs":
-            return self._priority_search("gbfs")
-        if m == "as":
-            return self._priority_search("as")
-        if m == "cus1":
-            return self._priority_search("cus1")
-        if m == "cus2":
-            return self._ida_star()
+    def solve(self, search_method: str) -> Optional[Tuple[int, int, List[int]]]:
+        """
+        Dispatcher method that routes the execution to the appropriate search algorithm.
+        
+        Args:
+            search_method (str): A string indicating the algorithm to execute (e.g., 'dfs', 'bfs', 'as').
+            
+        Returns:
+            Optional[Tuple[int, int, List[int]]]: A tuple containing (Goal Node ID, Total Nodes Created, Path Sequence).
+                                                  Returns None if all paths are exhausted and no solution exists.
+        """
+        normalized_method = search_method.lower()
+        
+        if normalized_method == "dfs":
+            return self._execute_depth_first_search()
+        if normalized_method == "bfs":
+            return self._execute_breadth_first_search()
+        if normalized_method == "gbfs":
+            return self._execute_priority_search("gbfs")
+        if normalized_method == "as":
+            return self._execute_priority_search("as")
+        if normalized_method == "cus1":
+            return self._execute_priority_search("cus1")
+        if normalized_method == "cus2":
+            return self._execute_iterative_deepening_a_star()
+            
         return None
 
-    def _dfs(self):
-        start = self._create_node(self.graph.origin, None, 0, "dfs")
-        stack = [start]
-        visited = set()  # Standard DFS typically avoids cycles in the current path, but for route finding on graphs we track visited.
-        # Spec implies tree search logic but graph finding usually needs visited set to avoid infinite loops on cycles.
-        # Given "Tree Based Search" title, strictly it might mean no visited set, but that crashes on 1<->2.
-        # However, to be safe and standard for "finding a path", we use a visited set (Graph Search).
-        # Most assignments allow Graph Search for efficiency unless explicitly "Tree Search" (explode exponential).
-        # Let's check requirements. "Algorithms to implement... DFS".
-        # I'll use a visited set to be safe. But wait, DFS for pathfinding usually keeps visited for *current path* to allow finding other paths?
-        # No, for "finding *a* path", graph search (global visited) is standard and efficient.
-
-        visited.add(self.graph.origin)  # Add start to visited immediately
-
-        # Wait, if I add to visited immediately, I accept the start node.
-        # In the loop:
+    def _execute_depth_first_search(self) -> Optional[Tuple[int, int, List[int]]]:
+        """
+        Executes a Depth-First Search (DFS) traversal.
+        
+        Utilizes a global visited set (Graph Search approach) to efficiently prevent 
+        infinite loops in cyclic graphs while guaranteeing a path is found if one exists.
+        """
+        start_state = self._create_search_state(self.graph.origin, None, 0.0, "dfs")
+        stack: List[SearchState] = [start_state]
+        visited_nodes: Set[int] = {self.graph.origin} 
 
         while stack:
-            curr = stack.pop()
+            current_state = stack.pop()
 
-            # Check goal
-            if curr.node_id in self.graph.destinations:
-                return curr.node_id, self.node_count, self._reconstruct(curr)
+            if current_state.node_id in self.graph.destinations:
+                return current_state.node_id, self.total_nodes_created, self._reconstruct_path(current_state)
 
-            # Expand
-            neighbors = self.graph.get_neighbors(curr.node_id)
-            # Sort DESCENDING by ID so that when pushed to stack, they are popped in ASCENDING ID order
-            neighbors.sort(key=lambda x: x[0], reverse=True)
+            neighbors = self.graph.get_neighbors(current_state.node_id)
+            
+            # DFS specific tie-breaking: Sort neighbors DESCENDING by identifier.
+            # Because a stack is Last-In-First-Out (LIFO), pushing them in descending order 
+            # ensures they are popped and expanded in strictly ASCENDING order.
+            neighbors.sort(key=lambda neighbor: neighbor[0], reverse=True)
 
-            for nid, cost in neighbors:
-                if nid not in visited:
-                    visited.add(nid)
-                    stack.append(self._create_node(nid, curr, curr.g + cost, "dfs"))
+            for neighbor_identifier, edge_weight in neighbors:
+                if neighbor_identifier not in visited_nodes:
+                    visited_nodes.add(neighbor_identifier)
+                    new_cumulative_cost = current_state.g + edge_weight
+                    new_state = self._create_search_state(neighbor_identifier, current_state, new_cumulative_cost, "dfs")
+                    stack.append(new_state)
+                    
         return None
 
-    def _bfs(self):
-        start = self._create_node(self.graph.origin, None, 0, "bfs")
-        queue = deque([start])
-        visited = {self.graph.origin}
+    def _execute_breadth_first_search(self) -> Optional[Tuple[int, int, List[int]]]:
+        """
+        Executes a Breadth-First Search (BFS) traversal.
+        """
+        start_state = self._create_search_state(self.graph.origin, None, 0.0, "bfs")
+        queue: deque[SearchState] = deque([start_state])
+        visited_nodes: Set[int] = {self.graph.origin}
 
         while queue:
-            curr = queue.popleft()
-            if curr.node_id in self.graph.destinations:
-                return curr.node_id, self.node_count, self._reconstruct(curr)
+            current_state = queue.popleft()
+            
+            if current_state.node_id in self.graph.destinations:
+                return current_state.node_id, self.total_nodes_created, self._reconstruct_path(current_state)
 
-            neighbors = self.graph.get_neighbors(curr.node_id)
-            # Sort ASCENDING by ID
-            neighbors.sort(key=lambda x: x[0])
+            neighbors = self.graph.get_neighbors(current_state.node_id)
+            
+            # BFS specific tie-breaking: Sort neighbors ASCENDING by identifier.
+            # Because a queue is First-In-First-Out (FIFO), adding them in ascending order 
+            # guarantees they are dequeued and expanded in the exact same ascending order.
+            neighbors.sort(key=lambda neighbor: neighbor[0])
 
-            for nid, cost in neighbors:
-                if nid not in visited:
-                    visited.add(nid)
-                    queue.append(self._create_node(nid, curr, curr.g + cost, "bfs"))
+            for neighbor_identifier, edge_weight in neighbors:
+                if neighbor_identifier not in visited_nodes:
+                    visited_nodes.add(neighbor_identifier)
+                    new_cumulative_cost = current_state.g + edge_weight
+                    new_state = self._create_search_state(neighbor_identifier, current_state, new_cumulative_cost, "bfs")
+                    queue.append(new_state)
+                    
         return None
 
-    def _priority_search(self, method):
-        start = self._create_node(self.graph.origin, None, 0, method)
-        open_set = [start]  # Heap
-        closed = set()
+    def _execute_priority_search(self, search_method: str) -> Optional[Tuple[int, int, List[int]]]:
+        """
+        Executes priority-queue based algorithms: Greedy Best-First Search (GBFS), 
+        A* Search (AS), and Uniform Cost Search (CUS1).
+        
+        Args:
+            search_method (str): The identifier configuring how the evaluation function f(n) is computed.
+        """
+        start_state = self._create_search_state(self.graph.origin, None, 0.0, search_method)
+        open_priority_queue: List[SearchState] = [start_state]
+        closed_set: Set[int] = set()
 
-        while open_set:
-            curr = heapq.heappop(open_set)
+        while open_priority_queue:
+            current_state = heapq.heappop(open_priority_queue)
 
-            # Goal check deferred to expansion time? Standard A* does goal check when popped.
-            if curr.node_id in self.graph.destinations:
-                return curr.node_id, self.node_count, self._reconstruct(curr)
+            if current_state.node_id in self.graph.destinations:
+                return current_state.node_id, self.total_nodes_created, self._reconstruct_path(current_state)
 
-            if curr.node_id in closed:
+            # Lazy deletion implementation: ignore states if the node was previously expanded 
+            # via a shorter or equivalent path.
+            if current_state.node_id in closed_set:
                 continue
-            closed.add(curr.node_id)
+                
+            closed_set.add(current_state.node_id)
 
-            for nid, cost in self.graph.get_neighbors(curr.node_id):
-                if nid not in closed:
-                    # Heap push handles sorting via SearchState.__lt__
-                    # Note: We do not check for existence in open_set and update.
-                    # We simpler add duplicates, and filter by closed set when popped.
-                    # This is valid "lazy" Dijkstra/A*.
-                    heapq.heappush(
-                        open_set, self._create_node(nid, curr, curr.g + cost, method)
-                    )
+            for neighbor_identifier, edge_weight in self.graph.get_neighbors(current_state.node_id):
+                if neighbor_identifier not in closed_set:
+                    new_cumulative_cost = current_state.g + edge_weight
+                    new_state = self._create_search_state(neighbor_identifier, current_state, new_cumulative_cost, search_method)
+                    
+                    # Tie-breaking logic (Cost -> Chronological -> Identifier) is inherently 
+                    # handled by Python's heapq combined with the SearchState's __lt__ magic method.
+                    heapq.heappush(open_priority_queue, new_state)
+                    
         return None
 
-    def _ida_star(self):
-        # Iterative Deepening A*
-        start_h = self.graph.heuristic(self.graph.origin)
-        threshold = start_h
+    def _execute_iterative_deepening_a_star(self) -> Optional[Tuple[int, int, List[int]]]:
+        """
+        Executes the Iterative Deepening A* (IDA*) search algorithm (CUS2 method).
+        """
+        initial_heuristic = self.graph.heuristic(self.graph.origin)
+        current_threshold = initial_heuristic
 
         while True:
-            # Create start node for this iteration?
-            # Or reuse? If we count "nodes created", strict adherence implies we might create fresh tree.
-            # But the prompt is "nodes created" total.
-            # We will start fresh search.
-            start_node = self._create_node(self.graph.origin, None, 0, "cus2")
+            # Generate a fresh start state for every deepening iteration. 
+            # This ensures the total_nodes_created metric accurately reflects the multi-pass nature of IDA*.
+            start_state = self._create_search_state(self.graph.origin, None, 0.0, "cus2")
 
-            t = self._ida_recursive(start_node, threshold, [self.graph.origin])
+            search_result = self._iterative_deepening_recursive(start_state, current_threshold, [self.graph.origin])
 
-            if isinstance(t, SearchState):
-                return t.node_id, self.node_count, self._reconstruct(t)
+            # If the recursive function returns a SearchState, the goal was successfully reached.
+            if isinstance(search_result, SearchState):
+                return search_result.node_id, self.total_nodes_created, self._reconstruct_path(search_result)
 
-            if t == float("inf"):
+            # If the threshold returned is infinity, all possible paths have been exhausted.
+            if search_result == float("inf"):
                 return None
 
-            threshold = t
+            # Deepen the allowed cost threshold for the subsequent iteration.
+            current_threshold = float(search_result)
 
-    def _ida_recursive(self, current, threshold, path_ids):
-        f = current.g + current.h
-        if f > threshold:
-            return f
+    def _iterative_deepening_recursive(
+        self, 
+        current_state: SearchState, 
+        current_threshold: float, 
+        current_path_identifiers: List[int]
+    ) -> Any:
+        """
+        Recursive depth-first traversal helper for Iterative Deepening A*.
+        Evaluates nodes along a branch strictly up to the defined cost threshold.
+        
+        Args:
+            current_state (SearchState): The state currently being evaluated.
+            current_threshold (float): The maximum allowed total estimated cost (f = g + h) for this pass.
+            current_path_identifiers (List[int]): Identifiers in the active path, used to prevent cycles.
+            
+        Returns:
+            SearchState: If a valid destination is found.
+            float: The minimum path cost that exceeded the threshold, which becomes the threshold for the next pass.
+        """
+        total_estimated_cost = current_state.g + current_state.h
+        
+        if total_estimated_cost > current_threshold:
+            return total_estimated_cost
 
-        if current.node_id in self.graph.destinations:
-            return current
+        if current_state.node_id in self.graph.destinations:
+            return current_state
 
-        min_val = float("inf")
-        neighbors = self.graph.get_neighbors(current.node_id)
+        minimum_exceeded_threshold = float("inf")
+        neighbors = self.graph.get_neighbors(current_state.node_id)
 
-        # Children generation
-        children = []
-        for nid, cost in neighbors:
-            if nid not in path_ids:  # Cycle checking for current path
-                child = self._create_node(nid, current, current.g + cost, "cus2")
-                children.append(child)
+        child_states: List[SearchState] = []
+        for neighbor_identifier, edge_weight in neighbors:
+            
+            # Strict cycle prevention for the current active branch
+            if neighbor_identifier not in current_path_identifiers:  
+                new_cumulative_cost = current_state.g + edge_weight
+                new_child_state = self._create_search_state(neighbor_identifier, current_state, new_cumulative_cost, "cus2")
+                child_states.append(new_child_state)
 
-        # Sort children: Ascending f (g+h), then IDs
-        children.sort(key=lambda s: (s.g + s.h, s.node_id))
+        # Enforce exact IDA* tie-breaking logic: 
+        # Primary: Ascending total estimated cost (f = g + h)
+        # Secondary: Node identifier (Ascending)
+        child_states.sort(key=lambda state: (state.g + state.h, state.node_id))
 
-        for child in children:
-            res = self._ida_recursive(child, threshold, path_ids + [child.node_id])
-            if isinstance(res, SearchState):
-                return res
-            if res < min_val:
-                min_val = res
+        for child_state in child_states:
+            extended_path = current_path_identifiers + [child_state.node_id]
+            recursive_result = self._iterative_deepening_recursive(child_state, current_threshold, extended_path)
+            
+            if isinstance(recursive_result, SearchState):
+                return recursive_result
+                
+            if recursive_result < minimum_exceeded_threshold:
+                minimum_exceeded_threshold = recursive_result
 
-        return min_val
+        return minimum_exceeded_threshold
