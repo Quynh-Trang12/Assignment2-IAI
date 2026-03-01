@@ -1,1 +1,61 @@
 TestCase,Method,Goal,NodesCreated,Path,Status,Duration
+T01_Standard.txt,DFS,4,4,2 1 4,SUCCESS,0.0776
+T01_Standard.txt,BFS,4,6,2 1 4,SUCCESS,0.0808
+T01_Standard.txt,GBFS,5,6,2 3 5,SUCCESS,0.0954
+T01_Standard.txt,AS,4,7,2 1 4,SUCCESS,0.1095
+T01_Standard.txt,CUS1,4,7,2 1 4,SUCCESS,0.0788
+T01_Standard.txt,CUS2,5,23,2 3 5,SUCCESS,0.0793
+T02_Unreachable.txt,DFS,None,0,None,No_Solution,0.0790
+T02_Unreachable.txt,BFS,None,0,None,No_Solution,0.0781
+T02_Unreachable.txt,GBFS,None,0,None,No_Solution,0.0799
+T02_Unreachable.txt,AS,None,0,None,No_Solution,0.0783
+T02_Unreachable.txt,CUS1,None,0,None,No_Solution,0.0771
+T02_Unreachable.txt,CUS2,None,0,None,No_Solution,0.0770
+T03_Cycles.txt,DFS,4,4,1 2 4,SUCCESS,0.0779
+T03_Cycles.txt,BFS,4,4,1 2 4,SUCCESS,0.0763
+T03_Cycles.txt,GBFS,4,4,1 2 4,SUCCESS,0.0746
+T03_Cycles.txt,AS,4,4,1 2 4,SUCCESS,0.0793
+T03_Cycles.txt,CUS1,4,4,1 2 4,SUCCESS,0.0815
+T03_Cycles.txt,CUS2,4,14,1 2 4,SUCCESS,0.0831
+T04_TieBreak.txt,DFS,4,4,1 2 4,SUCCESS,0.0861
+T04_TieBreak.txt,BFS,4,4,1 2 4,SUCCESS,0.0815
+T04_TieBreak.txt,GBFS,4,4,1 2 4,SUCCESS,0.0808
+T04_TieBreak.txt,AS,4,4,1 2 4,SUCCESS,0.0857
+T04_TieBreak.txt,CUS1,4,5,1 2 4,SUCCESS,0.0813
+T04_TieBreak.txt,CUS2,4,7,1 2 4,SUCCESS,0.0802
+T05_Linear.txt,DFS,5,5,1 2 3 4 5,SUCCESS,0.0774
+T05_Linear.txt,BFS,5,5,1 2 3 4 5,SUCCESS,0.0795
+T05_Linear.txt,GBFS,5,5,1 2 3 4 5,SUCCESS,0.0805
+T05_Linear.txt,AS,5,5,1 2 3 4 5,SUCCESS,0.0936
+T05_Linear.txt,CUS1,5,5,1 2 3 4 5,SUCCESS,0.0815
+T05_Linear.txt,CUS2,5,5,1 2 3 4 5,SUCCESS,0.1555
+T06_MultiDest.txt,DFS,3,4,1 2 3,SUCCESS,0.1806
+T06_MultiDest.txt,BFS,3,5,1 2 3,SUCCESS,0.0824
+T06_MultiDest.txt,GBFS,5,4,1 4 5,SUCCESS,0.0827
+T06_MultiDest.txt,AS,5,4,1 4 5,SUCCESS,0.0811
+T06_MultiDest.txt,CUS1,5,4,1 4 5,SUCCESS,0.0834
+T06_MultiDest.txt,CUS2,5,4,1 4 5,SUCCESS,0.0849
+T07_HeuristicTrap.txt,DFS,4,4,1 2 4,SUCCESS,0.0832
+T07_HeuristicTrap.txt,BFS,4,4,1 2 4,SUCCESS,0.0852
+T07_HeuristicTrap.txt,GBFS,4,4,1 2 4,SUCCESS,0.0816
+T07_HeuristicTrap.txt,AS,4,5,1 3 4,SUCCESS,0.0888
+T07_HeuristicTrap.txt,CUS1,4,4,1 3 4,SUCCESS,0.0765
+T07_HeuristicTrap.txt,CUS2,4,9,1 3 4,SUCCESS,0.0850
+T08_CostVsHops.txt,DFS,3,4,1 2 3,SUCCESS,0.0925
+T08_CostVsHops.txt,BFS,3,5,1 2 3,SUCCESS,0.0785
+T08_CostVsHops.txt,GBFS,3,4,1 2 3,SUCCESS,0.0770
+T08_CostVsHops.txt,AS,3,6,1 4 5 6 3,SUCCESS,0.0802
+T08_CostVsHops.txt,CUS1,3,6,1 4 5 6 3,SUCCESS,0.0829
+T08_CostVsHops.txt,CUS2,3,13,1 4 5 6 3,SUCCESS,0.0818
+T09_DeadEnd.txt,DFS,4,4,1 3 4,SUCCESS,0.0762
+T09_DeadEnd.txt,BFS,4,4,1 3 4,SUCCESS,0.0796
+T09_DeadEnd.txt,GBFS,4,4,1 3 4,SUCCESS,0.0810
+T09_DeadEnd.txt,AS,4,4,1 3 4,SUCCESS,0.0802
+T09_DeadEnd.txt,CUS1,4,4,1 3 4,SUCCESS,0.0795
+T09_DeadEnd.txt,CUS2,4,4,1 3 4,SUCCESS,0.0815
+T10_ZeroCost.txt,DFS,3,3,1 2 3,SUCCESS,0.0791
+T10_ZeroCost.txt,BFS,3,3,1 2 3,SUCCESS,0.0827
+T10_ZeroCost.txt,GBFS,3,3,1 2 3,SUCCESS,0.0797
+T10_ZeroCost.txt,AS,3,3,1 2 3,SUCCESS,0.1439
+T10_ZeroCost.txt,CUS1,3,3,1 2 3,SUCCESS,0.0934
+T10_ZeroCost.txt,CUS2,3,3,1 2 3,SUCCESS,0.0775

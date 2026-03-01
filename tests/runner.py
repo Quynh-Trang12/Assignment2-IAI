@@ -276,12 +276,15 @@ class BenchmarkOrchestrator:
 # Application Entry Point
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
-    # Define absolute systemic dependencies using pathlib for execution safety.
-    # __file__ securely references the location of THIS specific python script,
-    # ensuring operations run relative to the codebase root, regardless of the active terminal directory.
+    # base_directory is currently the 'tests/' folder
     base_directory = Path(__file__).parent
-    target_executable = base_directory / "search.py"
-    target_test_cases_dir = base_directory / "tests" / "cases"
+    
+    # The project root is one level up from the 'tests/' folder
+    project_root = base_directory.parent
+    
+    # Correctly resolve the absolute paths
+    target_executable = project_root / "search.py"
+    target_test_cases_dir = base_directory / "cases"
     target_report_file = base_directory / "results.csv"
     
     algorithms_to_evaluate = ["dfs", "bfs", "gbfs", "as", "cus1", "cus2"]
