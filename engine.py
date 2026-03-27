@@ -173,7 +173,8 @@ class SearchEngine:
             for neighbor_identifier, edge_weight in neighbors:
                 if neighbor_identifier not in visited_nodes:
                     visited_nodes.add(neighbor_identifier)
-                    new_cumulative_cost = current_state.g + edge_weight
+                    travel_time = self.graph.get_edge_cost(current_state.node_id, neighbor_identifier)
+                    new_cumulative_cost = current_state.g + travel_time
                     new_state = self._create_search_state(neighbor_identifier, current_state, new_cumulative_cost, "dfs")
                     stack.append(new_state)
                     
@@ -211,7 +212,8 @@ class SearchEngine:
             for neighbor_identifier, edge_weight in neighbors:
                 if neighbor_identifier not in visited_nodes:
                     visited_nodes.add(neighbor_identifier)
-                    new_cumulative_cost = current_state.g + edge_weight
+                    travel_time = self.graph.get_edge_cost(current_state.node_id, neighbor_identifier)
+                    new_cumulative_cost = current_state.g + travel_time
                     new_state = self._create_search_state(neighbor_identifier, current_state, new_cumulative_cost, "bfs")
                     queue.append(new_state)
                     
@@ -255,7 +257,8 @@ class SearchEngine:
 
             for neighbor_identifier, edge_weight in self.graph.get_neighbors(current_state.node_id):
                 if neighbor_identifier not in closed_set:
-                    new_cumulative_cost = current_state.g + edge_weight
+                    travel_time = self.graph.get_edge_cost(current_state.node_id, neighbor_identifier)
+                    new_cumulative_cost = current_state.g + travel_time
                     new_state = self._create_search_state(neighbor_identifier, current_state, new_cumulative_cost, search_method)
                     heapq.heappush(open_priority_queue, new_state)
                     
@@ -356,7 +359,8 @@ class SearchEngine:
             # Local Cycle Prevention: Ensures the current sequence doesn't loop back on itself, 
             # but allows other branches to visit the same node later if cheaper.
             if neighbor_identifier not in current_path_identifiers:  
-                new_cumulative_cost = current_state.g + edge_weight
+                travel_time = self.graph.get_edge_cost(current_state.node_id, neighbor_identifier)
+                new_cumulative_cost = current_state.g + travel_time
                 new_child_state = self._create_search_state(neighbor_identifier, current_state, new_cumulative_cost, "cus2")
                 child_states.append(new_child_state)
 
