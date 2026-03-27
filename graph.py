@@ -35,9 +35,9 @@ class Graph:
 
     def get_neighbors(self, node: int):
         """
-        Return neighbors of a node.
+        Return neighbors of a node as (neighbor, distance).
         """
-        return self.adjacency_list.get(node, {}).keys()
+        return list(self.adjacency_list.get(node, {}).items())
 
     def heuristic(self, node: int) -> float:
         """

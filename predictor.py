@@ -129,11 +129,16 @@ class FlowPredictor:
         if not hasattr(self, 'baseline_flow_by_site') or not self.baseline_flow_by_site:
             return None
             
-        # Extract deterministically sorted list of valid sites
         sorted_sites = sorted(self.baseline_flow_by_site.keys())
         
-        # Consistently map numeric node ID to the same SCATS site
-        site_id = sorted_sites[v % len(sorted_sites)]
+        # If the node ID corresponds exactly to a known SCATS ID (e.g., node 2000 -> SCATS 2000)
+        site_id_str = str(v).zfill(4)
+        if site_id_str in self.baseline_flow_by_site:
+            site_id = site_id_str
+        else:
+            # Consistently map numeric node ID to the same SCATS site
+            site_id = sorted_sites[v % len(sorted_sites)]
+            
         self.node_to_site_map[v] = site_id
         
         return site_id

@@ -30,22 +30,46 @@ class RouteFinderGUI:
         input_frame = ttk.LabelFrame(self.root, text="Search Parameters", padding=(10, 10))
         input_frame.pack(fill=tk.X, padx=10, pady=10)
         
-        self.node_options = [
-            "Node 1 (SCATS 0970)",
-            "Node 2 (SCATS 2000)",
-            "Node 3 (SCATS 3002)",
-            "Node 4 (SCATS 2827)",
-            "Node 5 (SCATS 3126)",
-            "Node 6 (SCATS 4335)"
-        ]
-        
+        import os, json, csv
+        try:
+            base_dir = os.path.dirname(__file__)
+            
+            # Load intersection names
+            self.site_names = {}
+            try:
+                with open(os.path.join(base_dir, "scats_mapping.csv"), "r") as mf:
+                    reader = csv.reader(mf)
+                    for row in reader:
+                        if len(row) >= 2 and row[0].isdigit():
+                            self.site_names[int(row[0])] = row[1].strip()
+            except Exception:
+                pass
+                
+            # Load valid sites
+            with open(os.path.join(base_dir, "baseline_avg_flow.json"), "r") as f:
+                flows = json.load(f)
+            sites = sorted(list(flows.keys()))
+            
+            self.node_options = []
+            for s in sites:
+                s_int = int(s)
+                name_desc = self.site_names.get(s_int, f"SCATS {s}")
+                self.node_options.append(f"Node {s_int} ({name_desc})")
+                
+            default_origin = self.node_options[0]
+            default_dest = self.node_options[-1]
+        except Exception:
+            self.node_options = ["Node 2000 (SCATS 2000)"]
+            default_origin = self.node_options[0]
+            default_dest = self.node_options[0]
+            
         ttk.Label(input_frame, text="Origin Node:").grid(row=0, column=0, sticky=tk.W, pady=5)
-        self.origin_var = tk.StringVar(value="Node 2 (SCATS 2000)")
+        self.origin_var = tk.StringVar(value=default_origin)
         self.origin_entry = ttk.Combobox(input_frame, textvariable=self.origin_var, values=self.node_options, state="readonly", width=20)
         self.origin_entry.grid(row=0, column=1, sticky=tk.W, padx=5)
         
         ttk.Label(input_frame, text="Destination Node:").grid(row=0, column=2, sticky=tk.W, pady=5, padx=(15, 0))
-        self.dest_var = tk.StringVar(value="Node 5 (SCATS 3126)")
+        self.dest_var = tk.StringVar(value=default_dest)
         self.dest_entry = ttk.Combobox(input_frame, textvariable=self.dest_var, values=self.node_options, state="readonly", width=20)
         self.dest_entry.grid(row=0, column=3, sticky=tk.W, padx=5)
         
@@ -95,8 +119,8 @@ class RouteFinderGUI:
             self.graph = Graph(self.predictor)
             self.graph.debug = True
             
-            # Hardcoded test map as default fallback if we don't have complete map geometry
-            self.graph.load_from_file("PathFinder-test.txt")
+            # Load the complete 40-node map
+            self.graph.load_from_file("Boroondara-map.txt")
             
             # Enable the UI
             self.root.after(0, lambda: self.search_btn.config(state=tk.NORMAL))
@@ -141,7 +165,7 @@ class RouteFinderGUI:
         except ValueError:
             self.root.after(0, lambda: messagebox.showerror("Input Error", "Node IDs must be valid selections and Time Index must be an integer."))
         except Exception as e:
-            self.root.after(0, lambda: messagebox.showerror("Execution Error", str(e)))
+            self.root.after(0, lambda err=e: messagebox.showerror("Execution Error", str(err)))
         finally:
             self.root.after(0, lambda: self.search_btn.config(state=tk.NORMAL))
             self.root.after(0, lambda: self.status_var.set("Execution Complete."))

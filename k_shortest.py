@@ -22,7 +22,7 @@ def solve_k_paths(graph: Graph, origin: int, destination: int, k_paths: int = 5,
                 continue
             closed_set.add(current)
             
-            for neighbor in graph.get_neighbors(current):
+            for neighbor, _ in graph.get_neighbors(current):
                 if neighbor in closed_set or neighbor in mask_nodes:
                     continue
                 if (current, neighbor) in mask_edges:
