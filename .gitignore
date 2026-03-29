@@ -1,13 +1,11 @@
-# Python / Data (Added to fix push error)
+# Python & Cache
 __pycache__/
 *.py[cod]
 *$py.class
 .venv/
 venv/
 env/
-*.csv
-*xls
-*.xlsx
+cache/
 
 # Documentation specification
 docs/*
@@ -30,6 +28,3 @@ docs/*
 .pytest_cache/
 *.coverage
 htmlcov/
-
-# Cache
-cache/
