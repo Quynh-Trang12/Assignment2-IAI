@@ -470,7 +470,9 @@ class SearchEngine:
         A_paths: List[List[int]] = [first_path]
         B_candidates: List[Tuple[float, List[int]]] = []
 
-        # FIX 1: Track the exact 'Nodes Explored' snapshot for each individual path
+        # OPTIMIZATION: Track unique candidates instantly using a Hash Set
+        B_candidates_set: Set[Tuple[int, ...]] = set()
+
         paths_nodes_explored = [self.total_nodes_created]
 
         for k_index in range(1, k):
@@ -500,16 +502,23 @@ class SearchEngine:
                     complete_path = root_sequence[:-1] + spur_sequence
                     complete_cost = _compute_path_cost(complete_path)
 
-                    # FIX 2: Strictly prevent duplicate paths from entering candidates
-                    if complete_path not in A_paths and complete_path not in [
-                        c[1] for c in B_candidates
-                    ]:
+                    # Convert list to tuple so it can be hashed in the set
+                    path_tuple = tuple(complete_path)
+
+                    # OPTIMIZED: O(1) Instant duplicate check
+                    if (
+                        complete_path not in A_paths
+                        and path_tuple not in B_candidates_set
+                    ):
                         heapq.heappush(B_candidates, (complete_cost, complete_path))
+                        B_candidates_set.add(
+                            path_tuple
+                        )  # Add to set for future instant checks
 
             if not B_candidates:
                 break
 
-            # FIX 3: Ensure we only promote a strictly unique path to the final Top-K list
+            # Ensure we only promote a strictly unique path to the final Top-K list
             is_new_path_found = False
             while B_candidates:
                 _, optimal_candidate_path = heapq.heappop(B_candidates)
