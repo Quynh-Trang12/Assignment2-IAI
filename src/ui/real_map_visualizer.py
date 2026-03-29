@@ -61,16 +61,16 @@ def generate_interactive_map():
     # 2. Draw the Boroondara Boundary Polygon
     # Folium uses (Latitude, Longitude) format for plotting
     boroondara_polygon = [
-            (144.985, -37.815),  # West edge (Hawthorn / Yarra River)
-            (145.010, -37.765),  # NW edge (Kew / Yarra Bend)
-            (145.050, -37.755),  # Mid-North edge (Kew East / River Bend)
-            (145.090, -37.775),  # NE edge (Balwyn North / Eastern Freeway)
-            (145.120, -37.830),  # East edge (Surrey Hills / Warrigal Rd)
-            (145.100, -37.880),  # SE edge (Ashburton)
-            (145.040, -37.875),  # South edge (Glen Iris / Gardiners Creek)
-            (145.020, -37.845),  # SW edge (Kooyong)
-            (144.990, -37.835),  # SW edge (Hawthorn)
-        ]
+        (-37.815, 144.985),  # West edge (Hawthorn / Yarra River)
+        (-37.765, 145.010),  # NW edge (Kew / Yarra Bend)
+        (-37.755, 145.050),  # Mid-North edge (Kew East / River Bend)
+        (-37.775, 145.090),  # NE edge (Balwyn North / Eastern Freeway)
+        (-37.830, 145.120),  # East edge (Surrey Hills / Warrigal Rd)
+        (-37.880, 145.100),  # SE edge (Ashburton)
+        (-37.875, 145.040),  # South edge (Glen Iris / Gardiners Creek)
+        (-37.845, 145.020),  # SW edge (Kooyong)
+        (-37.835, 144.990),  # SW edge (Hawthorn)
+    ]
 
     folium.Polygon(
         locations=boroondara_polygon,
