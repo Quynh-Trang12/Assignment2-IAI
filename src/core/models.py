@@ -62,26 +62,19 @@ class SearchState:
         """
         method = self.search_method.lower()
 
-        # Uninformed searches (BFS, DFS) do not utilize priority scoring for exploration.
-        # Setting a baseline of 0.0 maintains structural compatibility across the engine.
         if method in ("bfs", "dfs"):
             self.priority_score = 0.0
-
-        # Greedy Best-First Search (GBFS) evaluates purely on estimated heuristic cost: f(n) = h(n)
         elif method == "gbfs":
             self.priority_score = self.h
-
-        # A* Search (AS) and Iterative Deepening A* (CUS2) evaluate on total estimated cost: f(n) = g(n) + h(n)
         elif method in ("as", "cus2"):
             self.priority_score = self.g + self.h
-
-        # Uniform Cost Search (CUS1) evaluates purely on the cumulative path cost: f(n) = g(n)
         elif method == "cus1":
             self.priority_score = self.g
-
-        # Fail-safe fallback to prevent math operation exceptions on undefined methods
         else:
             self.priority_score = 0.0
+
+        # Round once at creation. 6 decimal places is perfect for handling tiny travel time fractions without losing mathematical integrity.
+        self.priority_score = round(self.priority_score, 6)
 
     # ---------------------------------------------------------------------------
     # Operator Overloading (Tie-Breaking Engine)
@@ -97,9 +90,8 @@ class SearchState:
         Returns:
             bool: True if THIS state is mathematically "better" and should be expanded before the 'other' state.
         """
-
-        # 1. Primary Priority Comparison (Optimized native absolute difference)
-        if abs(self.priority_score - other.priority_score) > 1e-9:
+        # 1. Primary Priority (Lightning fast, no math functions slowing down the queue)
+        if self.priority_score != other.priority_score:
             return self.priority_score < other.priority_score
 
         # 2. Secondary Tie-Breaker: Node Identifier (Ascending)

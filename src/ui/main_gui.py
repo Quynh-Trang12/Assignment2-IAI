@@ -363,11 +363,16 @@ class TrafficRoutingApp:
             base_speed = self.speed_limit_var.get()
             delay_hrs = self.delay_var.get() / 3600.0
 
-            for src, neighbors in temp_graph.adjacency_list.items():
-                for dst, physical_dist in neighbors.items():
-                    temp_graph.adjacency_list[src][dst] = (
-                        physical_dist / base_speed
-                    ) + delay_hrs
+            # Use if/else to avoid accidentally divide the time twice.
+            if self.use_ml_traffic.get():
+                self._apply_ml_weights(temp_graph, self.selected_model.get())
+            else:
+                # ONLY apply the static speed limit if ML is turned off
+                for src, neighbors in temp_graph.adjacency_list.items():
+                    for dst, physical_dist in neighbors.items():
+                        temp_graph.adjacency_list[src][dst] = (
+                            physical_dist / base_speed
+                        ) + delay_hrs
 
             if self.use_ml_traffic.get():
                 self._apply_ml_weights(temp_graph, self.selected_model.get())

@@ -122,11 +122,7 @@ class Graph:
         if node_identifier not in self.adjacency_list:
             return []
 
-        # Architectural Note:
-        # Returning sorted items guarantees that neighbors are processed in strictly ascending
-        # numerical order by their node IDs. This inherently satisfies the assignment's secondary
-        # tie-breaking rule at the expansion generation level.
-        return sorted(self.adjacency_list[node_identifier].items())
+        return sorted(self.adjacency_list[node_identifier].items(), key=lambda x: x[0])
 
     def heuristic(self, node_identifier: int) -> float:
         """
