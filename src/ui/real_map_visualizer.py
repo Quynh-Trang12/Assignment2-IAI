@@ -47,7 +47,7 @@ def generate_interactive_map():
         location=[-37.825, 145.050],
         zoom_start=12,
         zoom_control=False,  # Removes the +/- buttons
-        tiles="OpenStreetMap",
+        tiles="CartoDB positron",
         zoom_snap=0.25,  # Enables smooth fractional zooming
         zoom_delta=0.25,  # Slows down the zoom step size
         wheel_px_per_zoom_level=120,  # Smoothes out the scroll wheel feel
