@@ -100,12 +100,6 @@ The project is built using Python 3.9+. It is highly recommended to use a virtua
     ```bash
     python run_app.py data/maps/map.txt --gui
     ```
-
-    Note: Before running the GUI, you need to generate the graph topologies by the following command.
-
-    ```bash
-    python src/utils/graph_generator.py
-    ```
     
 - **Terminal Mode (Standard Search):** Executes a specific algorithm on a provided map.
     
@@ -114,6 +108,8 @@ The project is built using Python 3.9+. It is highly recommended to use a virtua
     
     # Example:
     python run_app.py tests/test_data/PathFinder-test.txt as
+
+    python src/core/search.py data/maps/map.txt topk-3 --traffic
     ```
     
     - **Success Output:**
