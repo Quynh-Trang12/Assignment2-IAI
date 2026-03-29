@@ -1,10 +1,17 @@
 import sys
-from src.utils.logger_setup import get_colored_logger
+
 import argparse
 from pathlib import Path
 import pandas as pd
 import numpy as np
 import warnings
+
+_CURRENT_DIR = Path(__file__).resolve().parent
+_PROJECT_ROOT = _CURRENT_DIR.parent.parent
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
+
+from src.utils.logger_setup import get_colored_logger
 
 # Instantiate the centralized, color-coded logger
 logger = get_colored_logger(__name__)
@@ -187,7 +194,8 @@ def clean_and_interpolate_traffic_data(
 # ---------------------------------------------------------
 if __name__ == "__main__":
     script_dir = Path(__file__).resolve().parent
-    project_root = script_dir.parent if script_dir.name == "src" else script_dir
+
+    project_root = script_dir.parent.parent
 
     default_input_path = project_root / "data" / "raw" / "Scats Data October 2006.xls"
     default_output_path = (

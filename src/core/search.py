@@ -115,7 +115,7 @@ class SearchCLI:
             sys.exit(1)
 
         # ---------------------------------------------------------
-        # PHASE 5 & TBRGS CONFIGURATION INJECTION
+        # ML TRAFFIC PREDICTIONS & TBRGS CONFIGURATION INJECTION
         # ---------------------------------------------------------
         # Requirement 4: Base state converts physical distances to travel time
         # using the 60km/h baseline + intersection delay.
@@ -130,7 +130,7 @@ class SearchCLI:
                 ) + delay_hrs
 
         if use_traffic_ml:
-            logger.info("Phase 5: Engaging ML Traffic Kinematics override...")
+            logger.info("Engaging ML Traffic Kinematics override...")
             cls._apply_traffic_kinematics(problem_graph)
 
         # Execute the search engine
