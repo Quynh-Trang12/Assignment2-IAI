@@ -1,0 +1,19 @@
+{
+    "TBRGS_Settings": {
+        "top_k_paths": 5,
+        "speed_limit_kmh": 60.0,
+        "intersection_delay_seconds": 30.0
+    },
+    "ML_Settings": {
+        "supported_models": ["lstm", "gru", "fnn"],
+        "capacity_threshold_veh_hr": 1500.0,
+        "congested_speed_kmh": 32.0,
+        "unmonitored_flow_assumption": 0.0,
+        "flow_at_under_capacity": 351.56
+    },
+    "GUI_Defaults": {
+        "default_algorithm": "topk-5",
+        "default_model": "lstm",
+        "enable_ml_on_startup": false
+    }
+}

@@ -5,17 +5,15 @@ __pycache__/
 .venv/
 venv/
 env/
-data/
-*.pkl
+*.csv
+*xls
+*.xlsx
 
-# Assignment 2 Specific
-Assignment 2A/*
-Assignment 2B/*
-*.pdf
+# Documentation specification
+docs/*
 
 # Editor directories and files
-.vscode/*
-!.vscode/extensions.json
+.vscode/
 .idea
 .DS_Store
 *.suo
@@ -29,24 +27,9 @@ Assignment 2B/*
 *.pyc
 
 # Testing
-.pytest_cache/*
+.pytest_cache/
 *.coverage
-htmlcov/*
+htmlcov/
 
-# Agent
-.agent/*
-.agent/rules/*
-.agent/memory/*
-.agent/state/*
-.agent/tools/*
-.agent/logs/*
-.agent/cache/*
-.agent/config/*
-.agent/data/*
-.agent/temp/*
-.agent/tmp/*
-.agent/backup/*
-.agent/restore/*
-.agent/workflows/*
-
-
+# Cache
+cache/
