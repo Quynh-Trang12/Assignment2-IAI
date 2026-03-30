@@ -336,8 +336,12 @@ class TrafficRoutingApp:
         for src, neighbors in target_graph.adjacency_list.items():
             for dst, physical_dist in neighbors.items():
                 flow = predictions.get(dst, fallback_flow)
+                
+                # Convert 15-minute count to hourly flow mathematically exactly once
+                hourly_flow = flow * 4.0
+                
                 target_graph.adjacency_list[src][dst] = (
-                    calculate_travel_time(flow, physical_dist) + delay_hrs
+                    calculate_travel_time(hourly_flow, physical_dist) + delay_hrs
                 )
 
     def start_threaded_search(self) -> None:

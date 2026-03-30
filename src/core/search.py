@@ -78,8 +78,12 @@ class SearchCLI:
         for source_node, neighbors in graph.adjacency_list.items():
             for neighbor_id, physical_distance in neighbors.items():
                 predicted_flow = flow_predictions.get(neighbor_id, fallback_flow)
+                
+                # Convert 15-minute count to mathematically expected hourly flow
+                hourly_flow = predicted_flow * 4.0
+                
                 travel_time_hours = (
-                    calculate_travel_time(predicted_flow, physical_distance) + delay_hrs
+                    calculate_travel_time(hourly_flow, physical_distance) + delay_hrs
                 )
                 graph.adjacency_list[source_node][neighbor_id] = travel_time_hours
 
