@@ -77,7 +77,9 @@ class SearchCLI:
         # Overwrite physical distances in the adjacency list with travel time costs
         for source_node, neighbors in graph.adjacency_list.items():
             for neighbor_id, physical_distance in neighbors.items():
-                predicted_flow = flow_predictions.get(neighbor_id, fallback_flow)
+                # Convert the 15-min database prediction to Hourly Flow by multiply with 4
+                predicted_flow = flow_predictions.get(neighbor_id, fallback_flow) * 4.0
+
                 travel_time_hours = (
                     calculate_travel_time(predicted_flow, physical_distance) + delay_hrs
                 )

@@ -335,7 +335,9 @@ class TrafficRoutingApp:
 
         for src, neighbors in target_graph.adjacency_list.items():
             for dst, physical_dist in neighbors.items():
-                flow = predictions.get(dst, fallback_flow)
+                # Convert the 15-min database prediction to Hourly Flow by multiply with 4
+                flow = predictions.get(dst, fallback_flow) * 4.0
+
                 target_graph.adjacency_list[src][dst] = (
                     calculate_travel_time(flow, physical_dist) + delay_hrs
                 )
