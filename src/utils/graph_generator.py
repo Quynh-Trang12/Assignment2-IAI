@@ -2,12 +2,11 @@ import pandas as pd
 import math
 import sys
 import re
+from collections import defaultdict
 from pathlib import Path
-from typing import Dict, Tuple, List, Set
+from typing import Dict, Tuple, List
 
-# ---------------------------------------------------------------------------
 # Dynamic Path Resolution
-# ---------------------------------------------------------------------------
 _CURRENT_DIR = Path(__file__).resolve().parent
 _PROJECT_ROOT = _CURRENT_DIR.parent.parent
 if str(_PROJECT_ROOT) not in sys.path:
@@ -21,14 +20,15 @@ logger = get_colored_logger(__name__)
 
 class BoroondaraMapCompiler:
     """
-    Compiles VicRoads SCATS CSV data into a fully connected, traversable
-    mathematical graph constrained strictly to the Boroondara Local Government Area.
+    Compiles VicRoads SCATS CSV data into a connected, traversable mathematical graph.
+    Uses semantic road-name grouping to create realistic street links and drops isolated nodes.
     """
 
     def __init__(self, csv_input: Path, map_output: Path) -> None:
         self.csv_input = csv_input
         self.map_output = map_output
         self.nodes: Dict[int, Tuple[float, float]] = {}
+        self.descriptions: Dict[int, str] = {}
         self.edges: List[Tuple[int, int, float]] = []
 
     def _haversine(self, lon1: float, lat1: float, lon2: float, lat2: float) -> float:
@@ -53,7 +53,6 @@ class BoroondaraMapCompiler:
         """
         Ray-casting algorithm to strictly filter nodes inside the Boroondara polygon.
         """
-        # Polygon vertices tracing the real Boroondara borders.
         polygon_vertices = [
             (144.985, -37.815),  # West edge (Hawthorn / Yarra River)
             (145.010, -37.765),  # NW edge (Kew / Yarra Bend)
@@ -72,8 +71,6 @@ class BoroondaraMapCompiler:
         p1x, p1y = polygon_vertices[0]
         for i in range(1, vertex_count + 1):
             p2x, p2y = polygon_vertices[i % vertex_count]
-
-            # Evaluate if the infinite horizontal ray intersects the polygon's segment
             if latitude > min(p1y, p2y) and latitude <= max(p1y, p2y):
                 if longitude <= max(p1x, p2x):
                     if p1y != p2y:
@@ -88,7 +85,8 @@ class BoroondaraMapCompiler:
 
     def load_nodes(self) -> None:
         """
-        Ingests the CSV, maps SCATS IDs to coordinates, and applies the spatial boundary filter.
+        Ingests the CSV, maps SCATS IDs to coordinates and descriptions,
+        and applies the spatial boundary filter.
         """
         if not self.csv_input.exists():
             logger.error(f"File not found: {self.csv_input}")
@@ -97,17 +95,17 @@ class BoroondaraMapCompiler:
         dataframe = pd.read_csv(self.csv_input)
 
         try:
-            id_column = next(
+            id_col = next(
                 col
                 for col in dataframe.columns
                 if any(x in col.lower() for x in ["scats", "site", "id"])
             )
-            lon_column = next(
+            lon_col = next(
                 col
                 for col in dataframe.columns
                 if any(x in col.lower() for x in ["long", "x"])
             )
-            lat_column = next(
+            lat_col = next(
                 col
                 for col in dataframe.columns
                 if any(x in col.lower() for x in ["lat", "y"])
@@ -119,113 +117,140 @@ class BoroondaraMapCompiler:
             sys.exit(1)
 
         for _, row in dataframe.iterrows():
-            raw_identifier = str(row[id_column])
-            numeric_match = re.search(r"\d+", raw_identifier)
-            if not numeric_match:
+            raw_id = str(row[id_col])
+            match = re.search(r"\d+", raw_id)
+            if not match:
                 continue
 
-            scats_id = int(numeric_match.group())
-            lon, lat = float(row[lon_column]), float(row[lat_column])
+            scats_id = int(match.group())
+            lon, lat = float(row[lon_col]), float(row[lat_col])
 
             if self._is_in_boroondara(lon, lat):
                 self.nodes[scats_id] = (lon, lat)
 
-        logger.info(f"Successfully loaded {len(self.nodes)} strict Boroondara nodes.")
+                # Capture and merge descriptions for semantic road mapping
+                desc = (
+                    str(row.get("SITE_DESC", "")) + " " + str(row.get("TFM_DESC", ""))
+                )
+                self.descriptions[scats_id] = desc.upper()
+
+        logger.info(f"Loaded {len(self.nodes)} nodes within the Boroondara boundary.")
 
     def build_topology(self) -> None:
         """
-        Connects local nodes into a mesh, and leverages Kruskal's Algorithm
-        (Union-Find) to bridge isolated clusters, guaranteeing global connectivity.
+        Groups nodes by shared street names, sequences them geographically,
+        and extracts only the largest connected component to drop isolated sites.
         """
-        logger.info("Building local grid topology...")
-        node_ids = list(self.nodes.keys())
+        logger.info("Building topology based on real street names...")
 
-        # Establish base connectivity by linking each node to its 3 nearest geographic neighbors
-        for i, source_id in enumerate(node_ids):
-            distances = []
-            for j, target_id in enumerate(node_ids):
-                if i == j:
-                    continue
-                spatial_distance = self._haversine(
-                    *self.nodes[source_id], *self.nodes[target_id]
-                )
+        # 1. Group nodes by extracted road names
+        roads = defaultdict(list)
+        for scats_id, desc in self.descriptions.items():
+            # Strip out generic directional words to isolate core road names
+            clean_name = re.sub(r"\b(BD|N OF|S OF|E OF|W OF|HWY|RD|ST|AVE)\b", "", desc)
 
-                # Prevent mathematical loops on identically placed sensors or excessively distant nodes
-                if 0.001 < spatial_distance < 2.0:
-                    distances.append((target_id, spatial_distance))
+            # Split by delimiters like '/', '&', 'AND', or 'AT'
+            parts = re.split(r"/|&|\bAND\b|\bAT\b", clean_name)
+            for part in parts:
+                p = part.strip()
+                if len(p) > 2:  # Ignore tiny artifacts
+                    roads[p].append(scats_id)
 
-            distances.sort(key=lambda x: x[1])
-            for neighbor_id, dist in distances[:3]:
-                self.edges.append((source_id, neighbor_id, dist))
-                self.edges.append((neighbor_id, source_id, dist))
+        # 2. Sequence nodes along each street
+        raw_edges = set()
+        for street_name, sites in roads.items():
+            if len(sites) < 2:
+                continue
 
-        # Instantiate the Union-Find Disjoint Set to track network fragmentation
-        parent_pointers = {n: n for n in node_ids}
+            # Find the two extreme ends of the street
+            max_d = -1
+            extreme_a = sites[0]
+            for s1 in sites:
+                for s2 in sites:
+                    d = self._haversine(*self.nodes[s1], *self.nodes[s2])
+                    if d > max_d:
+                        max_d = d
+                        extreme_a = s1
 
-        def find_root(node: int) -> int:
-            """Recursively resolves the root of a node utilizing path compression."""
-            if parent_pointers[node] == node:
-                return node
-            parent_pointers[node] = find_root(parent_pointers[node])
-            return parent_pointers[node]
-
-        def perform_union(node_a: int, node_b: int) -> bool:
-            """Merges two discrete clusters. Returns True if a successful linkage occurred."""
-            root_a = find_root(node_a)
-            root_b = find_root(node_b)
-            if root_a != root_b:
-                parent_pointers[root_a] = root_b
-                return True
-            return False
-
-        # Register existing baseline connectivity to the Disjoint Set
-        for u, v, _ in self.edges:
-            perform_union(u, v)
-
-        # Analyze the topology to identify completely isolated islands
-        unique_roots = set(find_root(n) for n in node_ids)
-        if len(unique_roots) > 1:
-            logger.info(
-                f"Detected {len(unique_roots)} isolated clusters. Applying Kruskal's Stitching..."
+            # Sort all sites on the street by distance from extreme_a
+            sorted_sites = sorted(
+                sites,
+                key=lambda s: self._haversine(*self.nodes[extreme_a], *self.nodes[s]),
             )
 
-            # Compute distance bridges exclusively between nodes in separate clusters
-            cross_island_edges = []
-            for i in range(len(node_ids)):
-                for j in range(i + 1, len(node_ids)):
-                    u = node_ids[i]
-                    v = node_ids[j]
-                    if find_root(u) != find_root(v):
-                        dist = self._haversine(*self.nodes[u], *self.nodes[v])
-                        cross_island_edges.append((dist, u, v))
+            # Connect consecutive points along the sequence
+            for i in range(len(sorted_sites) - 1):
+                u, v = sorted_sites[i], sorted_sites[i + 1]
+                dist = self._haversine(*self.nodes[u], *self.nodes[v])
 
-            cross_island_edges.sort(key=lambda x: x[0])
+                # Sanity check: cap crazy connections resulting from bad string matches
+                if dist < 10.0:
+                    # Store canonical edge tuple
+                    edge_pair = tuple(sorted((u, v)))
+                    raw_edges.add((edge_pair[0], edge_pair[1], dist))
 
-            # Sequentially zip the clusters together until the global graph is whole
-            for dist, u, v in cross_island_edges:
-                if perform_union(u, v):
-                    self.edges.append((u, v, dist))
-                    self.edges.append((v, u, dist))
+        # 3. Find connected components to isolate unlinked nodes
+        adj_list = defaultdict(list)
+        for u, v, _ in raw_edges:
+            adj_list[u].append(v)
+            adj_list[v].append(u)
 
-            logger.info("Graph topology is now 100% fully connected across Boroondara.")
-        else:
-            logger.info("Graph topology is natively fully connected.")
+        visited = set()
+        components = []
+        for n in self.nodes.keys():
+            if n not in visited:
+                comp = set()
+                stack = [n]
+                while stack:
+                    curr = stack.pop()
+                    if curr not in comp:
+                        comp.add(curr)
+                        visited.add(curr)
+                        stack.extend(adj_list[curr])
+                components.append(comp)
+
+        # 4. Filter graph to guarantee traversability (drop isolated intersections)
+        if not components:
+            logger.error("No edges could be formed. Check street name extraction.")
+            return
+
+        largest_comp = max(components, key=len)
+        dropped_count = len(self.nodes) - len(largest_comp)
+
+        # Apply the filter
+        self.nodes = {k: v for k, v in self.nodes.items() if k in largest_comp}
+
+        for u, v, d in raw_edges:
+            if u in largest_comp and v in largest_comp:
+                self.edges.append((u, v, d))
+                self.edges.append((v, u, d))  # Bidirectional
+
+        logger.info(f"Dropped {dropped_count} isolated intersections.")
+        logger.info(
+            f"Final Graph: {len(self.nodes)} nodes, {len(self.edges)//2} bidirectional edges."
+        )
 
     def export(self) -> None:
         """
-        Serializes the fully connected graph topology to disk matching Assignment 2A specifications.
+        Serializes the fully connected graph topology to disk.
         """
+        if not self.nodes:
+            logger.warning("Graph is empty. Skipping export.")
+            return
+
         with open(self.map_output, "w", encoding="utf-8") as file_stream:
             file_stream.write("Nodes:\n")
-            for node_id, coordinates in self.nodes.items():
+            for node_id, coordinates in sorted(self.nodes.items()):
                 file_stream.write(f"{node_id}: {coordinates}\n")
 
             file_stream.write("\nEdges:\n")
-            for u, v, distance in self.edges:
-                file_stream.write(f"({u}, {v}): {distance}\n")
+            # Sort edges for clean output reading
+            for u, v, distance in sorted(self.edges):
+                file_stream.write(f"({u}, {v}): {distance:.3f}\n")
 
-            file_stream.write(f"\nOrigin:\n{list(self.nodes.keys())[0]}\n")
-            file_stream.write(f"\nDestinations:\n{list(self.nodes.keys())[-1]}\n")
+            sorted_keys = sorted(self.nodes.keys())
+            file_stream.write(f"\nOrigin:\n{sorted_keys[0]}\n")
+            file_stream.write(f"\nDestinations:\n{sorted_keys[-1]}\n")
 
         logger.info(f"Map successfully exported to {self.map_output}")
 
