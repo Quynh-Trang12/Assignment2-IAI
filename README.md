@@ -20,7 +20,7 @@ Assignment2-IAI
 ├── run_app.py                      # Main entry point (Terminal/GUI)
 ├── config.json                     # Global settings for ML capacities & UI defaults
 ├── requirements.txt                # Package dependencies
-|
+│
 ├── data/
 │   ├── database/                   # SQLite caches for pre-computed traffic states
 │   ├── maps/                       # Graph topologies and interactive map exports
@@ -28,39 +28,39 @@ Assignment2-IAI
 │   │   └── Scats_Data_Cleaned_GapSafe.csv              # Cleaned, time-series traffic data
 │   └── raw/                 
 │       ├── Scats Data October 2006.xls                 # Original raw VicRoads spreadsheets
-|       └── Traffic_Count_Locations_with_LONG_LAT.csv   # Original SCATS location and ID data
-|
+│       └── Traffic_Count_Locations_with_LONG_LAT.csv   # Original SCATS location and ID data
+│
 ├── models/
 │   ├── saved_models/               # Trained LSTM, GRU, and FNN .keras artifacts
 │   └── scalers/                    # Scalers for normalizing traffic flow inputs
 |
 ├── notebooks/
 │   └── model_training.ipynb        # Jupyter environment for ML training & evaluation
-|   
+│  
 ├── src/
 │   ├── core/                       # Phase 1: Search Engine Core Logic
 │   │   ├── engine.py               # Algorithmic orchestrator (DFS, BFS, GBFS, IDA, UCS, A*, Yen's)
 │   │   ├── graph.py                # Graph parsing and heuristic (h-value) logic
 │   │   ├── models.py               # SearchState and PriorityQueue for tie-breaking rules
 │   │   └── search.py               # Command-line interface logic
-|   |
+│   │
 │   ├── data/                       # Data Engineering
 │   │   ├── data_cleaner.py         # ETL pipeline for SCATS spreadsheets
 │   │   └── initialize_traffic.py   # Seeds SQLite caches with ML predictions
-|   |
+│   │
 │   ├── ml/                           # Machine Learning Inference
 │   │   └── traffic_flow_predictor.py # Inference engine for real-time flow
-|   |
+│   │
 │   ├── ui/                         # Visualization Layer
 │   │   ├── main_gui.py             # Tkinter-based interactive routing interface
 │   │   └── real_map_visualizer.py  # Folium-based OpenStreetMap generator
-|   |
+│   │
 │   └── utils/                      # Technical Utilities
 │       ├── config.py               # Config loader for application parameters
 │       ├── graph_generator.py      # Builds connected Boroondara graphs
 │       ├── logger_setup.py         # Color-coded logs setup
 │       └── speed_time_converter.py # Quadratic flow-to-speed math
-|
+│
 └── tests/                   # Benchmarking and Stress Testing Suite
     ├── cases/               # 10 Topology test cases (T01-T10) from Assignment 2A
     ├── factory.py           # Generates the 10 automated topology test cases for Assignment 2A
