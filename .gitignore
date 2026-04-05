@@ -7,9 +7,6 @@ venv/
 env/
 cache/
 
-# Documentation specification
-docs/*
-
 # Editor directories and files
 .vscode/
 .idea
