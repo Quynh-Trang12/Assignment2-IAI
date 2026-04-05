@@ -36,7 +36,7 @@ Assignment2-IAI
 |
 ├── notebooks/
 │   └── model_training.ipynb        # Jupyter environment for ML training & evaluation
-|   |
+|   
 ├── src/
 │   ├── core/                       # Phase 1: Search Engine Core Logic
 │   │   ├── engine.py               # Algorithmic orchestrator (DFS, BFS, GBFS, IDA, UCS, A*, Yen's)

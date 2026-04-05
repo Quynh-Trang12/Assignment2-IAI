@@ -120,7 +120,7 @@ class TestCategoryC_SoftwareIntegration(unittest.TestCase):
         temp_graph.load_from_file(str(self.map_path))
         temp_graph.is_time_based = False
 
-        # FIX: Pick a guaranteed 1-step path (an immediate neighbor)
+        # Pick a guaranteed 1-step path (an immediate neighbor)
         # This prevents any complex BFS traversal bugs in engine.py
         src = list(temp_graph.adjacency_list.keys())[0]
         dst = list(temp_graph.adjacency_list[src].keys())[0]
@@ -203,7 +203,7 @@ if __name__ == "__main__":
     print("=" * 60)
     print(f"Total Scenarios Tested : {result.testsRun}")
 
-    # FIX: Strictly account for skipped tests in the final tally
+    # Strictly account for skipped tests in the final tally
     num_skipped = len(result.skipped)
     passed_tests = (
         result.testsRun - len(result.failures) - len(result.errors) - num_skipped
